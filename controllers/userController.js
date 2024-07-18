@@ -5,28 +5,30 @@ const Review = require("../Model/ReviewModel");
 const generateAuthToken = require("../utils/generateAuthToken");
 const getUser = async (req, res, next) => {
   try {
-    const users = await User.find({}).select("-password").orFail();
-    console.log(users)
+    const users = await User.find({}).select("-password");
+    if (!users || users.length === 0) {
+      return res.json([]); // or return an empty array []
+    }
     return res.json(users);
   } catch (error) {
-    console.log(error)
+    console.log(error);
     next(error);
   }
 };
 
 const registerUser = async (req, res, next) => {
-  console.log("registerUser")
+  console.log("registerUser");
   try {
     const { name, lastName, email, password } = req.body;
     if (!(name && lastName && email && password)) {
       return res.status(400).send("All inputs are required");
     }
-    const userExists = await User.findOne({ email: email }).exec()
+    const userExists = await User.findOne({ email: email }).exec();
     if (userExists) {
-      console.log(userExists)
+      console.log(userExists);
       return res.status(400).send("user exists");
     }
-    console.log("yes1")
+    console.log("yes1");
     const hashedPassword = hashPassword(password);
     const user = await User.create({
       name,
@@ -37,7 +39,7 @@ const registerUser = async (req, res, next) => {
     res
       .cookie(
         "access_token",
-        generateAuthToken(_id, name, lastName, email, isAdmin),
+        generateAuthToken(user._id, name, lastName, email, user.isAdmin),
         {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
@@ -47,10 +49,13 @@ const registerUser = async (req, res, next) => {
       .status(201)
       .json({
         success: "User Created",
-        name: user.name,
-        lastName: user.lastName,
-        email: user.email,
-        isAdmin: user.isAdmin,
+        userCreated: {
+          _id: user._id,
+          name: user.name,
+          lastName: user.lastName,
+          email: user.email,
+          isAdmin: user.isAdmin,
+        },
       });
     res.end();
   } catch (error) {
@@ -60,12 +65,12 @@ const registerUser = async (req, res, next) => {
 
 const loginUser = async (req, res, next) => {
   try {
-    console.log("login")
+    console.log("login");
     const { email, password, doNotLogout } = req.body;
     if (!(email && password)) {
       return res.status(400).send("All inputs are required");
     }
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).orFail();
     if (user && comparePasswords(password, user.password)) {
       let cookieParams = {
         httpOnly: true,
@@ -91,7 +96,7 @@ const loginUser = async (req, res, next) => {
         .status(201)
         .json({
           success: "User Logged in",
-          userLoggedin: {
+          userLoggedIn: {
             id: user._id,
             name: user.name,
             lastName: user.lastName,
@@ -100,9 +105,8 @@ const loginUser = async (req, res, next) => {
             doNotLogout,
           },
         });
-    }
-    if (!user) {
-      return res.status(400).send("user doesn't exists");
+    } else {
+      return res.status(401).send("wrong credentials");
     }
   } catch (error) {
     next(error);
@@ -203,8 +207,8 @@ const writeReview = async (req, res, next) => {
     }
     await product.save();
 
-    await session.commitTransaction()
-    session.endSession()
+    await session.commitTransaction();
+    session.endSession();
     res.send("review created");
   } catch (error) {
     await session.abortTransaction();
@@ -212,18 +216,20 @@ const writeReview = async (req, res, next) => {
   }
 };
 
-const getUsers=async(req,res,next)=>{
+const getUsers = async (req, res, next) => {
   try {
-    const user=await User.findById(req.params.id).orFail();
-    return res.send("user found")
+    const user = await User.findById(req.params.id).orFail();
+    return res.send("user found");
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 
 const updateUser = async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id).select("name lastName email isAdmin").orFail();
+    const user = await User.findById(req.params.id)
+      .select("name lastName email isAdmin")
+      .orFail();
     user.name = req.body.name || user.name;
     user.lastName = req.body.lastName || user.lastName;
     user.email = req.body.email || user.email;
