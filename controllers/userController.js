@@ -3,6 +3,7 @@ const Product = require("../Model/ProductModel");
 const User = require("../Model/UserModel");
 const Review = require("../Model/ReviewModel");
 const generateAuthToken = require("../utils/generateAuthToken");
+
 const getUser = async (req, res, next) => {
   try {
     const users = await User.find({}).select("-password");
@@ -119,12 +120,13 @@ const updateUserProfile = async (req, res, next) => {
     user.name = req.body.name || user.name;
     user.lastName = req.body.lastName || user.lastName;
     user.email = req.body.email || user.email;
-    user.phoneNumber = req.body.phoneNumber;
+    user.phonenumber = req.body.phonenumber;
     user.address = req.body.address;
     user.country = req.body.country;
-    user.zipCode = req.body.zipCode;
+    user.ZIPcode = req.body.ZIPcode
     user.city = req.body.city;
     user.state = req.body.state;
+    console.log(req.body.password+"rbp")
     if (req.body.password !== user.password) {
       user.password = hashPassword(req.body.password);
     }
@@ -147,9 +149,11 @@ const updateUserProfile = async (req, res, next) => {
 
 const getUserProfile = async (req, res, next) => {
   try {
-  } catch (error) {
-    next(error);
-  }
+    const user = await User.findById(req.params.id).orFail();
+    return res.send(user);
+} catch(err) {
+    next(err)
+}
 };
 
 const writeReview = async (req, res, next) => {
