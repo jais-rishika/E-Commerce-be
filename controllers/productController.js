@@ -189,15 +189,15 @@ const adminCreateProduct = async (req, res, next) => {
 const adminUpdateProduct = async (req, res, next) => {
   try {
     const product = await Product.findById(req.params.id).orFail();
-    const { name, description, count, price, category, attributeTable } =
+    const { name, description, count, price, category, attrs } =
       req.body;
     product.name = name || product.name;
     product.description = description || product.description;
     product.count = count || product.count;
     product.price = price || product.price;
     product.category = category || product.category;
-    if (attributeTable.length > 0) {
-      product.attrs = attributeTable.map((item) => ({
+    if (product.attrs.length > 0) {
+      product.attrs = product.attrs.map((item) => ({
         key: item.key,
         value: item.value,
       }));
@@ -212,67 +212,43 @@ const adminUpdateProduct = async (req, res, next) => {
 };
 
 const adminUpload = async (req, res, next) => {
-  try {
-    if (!req.files || !req.files.images) {
-      return res.status(400).send("No files were uploaded");
-    }
-    const validateResult = imageValidate(req.files.images);
-    if (validateResult.error) {
-      return res.status(400).send(validateResult.error);
-    }
-    const path = require("path");
-    const { v4: uuidv4 } = require("uuid");
-    const uploadDirectory = path.resolve(
-      __dirname,
-      "../../frontend",
-      "public",
-      "images",
-      "products"
-    );
-    let product = await Product.findById(req.query.productId).orFail();
-    let imagesTable = [];
-    if (Array.isArray(req.files.images)) {
-      imagesTable = req.files.images;
-    } else {
-      imagesTable.push(req.files.images);
-    }
-    for (let image of imagesTable) {
-      var filename = uuidv4() + path.extname(image.name);
-      var uploadPath = uploadDirectory + "/" + filename;
-      product.images.push({ path: "/image/products/" + filename });
-      image.mv(uploadPath, function (err) {
-        if (err) {
-          return res.status(500).send(err);
-        }
-      });
-    }
-    await product.save();
-    return res.send("Files uploaded!");
-  } catch (error) {
+  try{
+    let product= await Product.findById(req.query.productId).orFail()
+    product.images.push({path: req.body.url})
+    await product.save()
+  }
+  catch (error) {
+    console.log(error)
     next(error);
   }
+  
 };
-
 const adminDeleteProductImage = async (req, res, next) => {
-  try {
     const imagePath = decodeURIComponent(req.params.imagePath);
-    const path = require("path");
-    const finalPath = path.resolve("../frontend/public") + imagePath;
-    constfs = require("fs");
-    fstat.unlink(finalPath, (err) => {
-      if (err) {
-        res.status(500).send(err);
-      }
-    });
-    await Product.findByIdAndUpdate(
+    await Product.findOneAndUpdate(
       { _id: req.params.productId },
-      { $pull: { image: { path: imagePath } } }
+      { $pull: { images: { path: imagePath } } }
     ).orFail();
-    return res.end();
-  } catch (error) {
-    next(error);
-  }
-};
+    return res.end()
+    // try {
+    //   const path = require("path");
+    //   const finalPath = path.resolve("../frontend/public") + imagePath;
+  
+    //   const fs = require("fs");
+    //   fs.unlink(finalPath, (err) => {
+    //     if (err) {
+    //       res.status(500).send(err);
+    //     }
+    //   });
+    //   await Product.findOneAndUpdate(
+    //     { _id: req.params.productId },
+    //     { $pull: { images: { path: imagePath } } }
+    //   ).orFail();
+    //   return res.end();
+    // } catch (err) {
+    //   next(err);
+    // }
+  };
 
 module.exports = {
   getProduct,

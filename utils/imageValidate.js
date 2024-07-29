@@ -10,7 +10,7 @@ const imageValidate = (images) => {
     return { error: "Send only 3 images at once" };
   }
   for (let image of imagesTable) {
-    if (image.size() > 1048576) return { error: "Size too large(above 1MB)" };
+    if (image.size > 1048576) return { error: "Size too large(above 1MB)" };
     const filetypes = /jpg|jpeg|png/;
     const mimetype = filetypes.test(image.mimetype);
     if (!mimetype)
@@ -18,3 +18,4 @@ const imageValidate = (images) => {
   }
   return {error: false}
 };
+module.exports=imageValidate

@@ -3,10 +3,11 @@ const router=express()
 // const {verifyIsLoggedIn ,verifyIsAdmin} = require("../middleware/verifyAuthToken");
 
 
-getCategories=require("../controllers/categoryController")
+const {getCategories, saveAttr}=require("../controllers/categoryController")
 
 // router.use(verifyIsLoggedIn)
 // router.use(verifyIsAdmin)
 router.get("/",getCategories)
+router.post("/attribute",saveAttr)
 
 module.exports=router
