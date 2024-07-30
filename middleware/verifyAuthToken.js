@@ -1,6 +1,6 @@
 const jwt=require("jsonwebtoken")
 const verifyIsLoggedIn = (req, res, next) => {
-  return next()
+  // return next()
   try {
     console.log("verifyLoggedIn")
     const token = req.cookies.access_token;
@@ -20,7 +20,7 @@ const verifyIsLoggedIn = (req, res, next) => {
 };
 
 const verifyIsAdmin=(req,res,next)=>{
-  return next()
+  // /return next()
   console.log("verifyIsAdmin")
     if(req.user && req.user.isAdmin){
         next()

@@ -11,7 +11,7 @@ router.post("/login", loginUser)
 router.use(verifyIsLoggedIn)
 router.put("/profile",updateUserProfile)
 router.get("/profile/:id",getUserProfile)
-router.post("/review/:productTd", writeReview)
+router.post("/review/:productId", writeReview)
 
 
 //user logged in routes

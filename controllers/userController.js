@@ -157,9 +157,10 @@ const getUserProfile = async (req, res, next) => {
 };
 
 const writeReview = async (req, res, next) => {
+  const session = await Review.startSession();
+  
   try {
     //transaction
-    const session = await Review.startSession();
     const { comment, rating } = req.body;
     //validate req
     if (!(comment && rating)) {
@@ -167,7 +168,7 @@ const writeReview = async (req, res, next) => {
     }
     const objectId = require("mongodb").ObjectId;
     let reviewId = objectId();
-
+    
     session.startTransaction();
     await Review.create(
       [
@@ -183,32 +184,34 @@ const writeReview = async (req, res, next) => {
       ],
       { session: session }
     );
-    const product = await Product.findById(req.params.product_Id)
+    const product = await Product.findById(req.params.productId)
       .populate("reviews")
-      .session(session);
+      .session(session)
     const alreadyReviewed = product.reviews.find(
       (r) => r.user._id.toString() === req.user._id.toString()
     );
     if (alreadyReviewed) {
       await session.abortTransaction();
       session.endSession();
-      return res.status(400).send("proudct already received");
+      return res.status(400).send("Product already received");
     }
     let prc = [...product.reviews];
     prc.push({
       rating: rating,
     });
+    console.log(product)
     product.reviews.push(reviewId);
     if (product.reviews.length === 1) {
       product.rating = Number(rating);
       product.reviewsNumber = 1;
     } else {
       product.reviewsNumber = product.reviews.length;
-      product.rating =
+      let ratingCalc=
         prc
           .map((item) => Number(item.rating))
-          .reduce((sum, item) => sum + item, 0) / reviewsNumber;
-    }
+          .reduce((sum, item) => sum + item, 0 /product.reviewsNumber);
+          product.rating = Math.round(ratingCalc)
+        }
     await product.save();
 
     await session.commitTransaction();
@@ -237,7 +240,7 @@ const updateUser = async (req, res, next) => {
     user.name = req.body.name || user.name;
     user.lastName = req.body.lastName || user.lastName;
     user.email = req.body.email || user.email;
-    user.isAdmin = req.body.isAdmin || user.isAdmin;
+    user.isAdmin = req.body.isAdmin
 
     await user.save();
     res.send("user Updated");

@@ -170,7 +170,7 @@ const adminCreateProduct = async (req, res, next) => {
     product.count = count;
     product.price = price;
     product.category = category;
-    if (attributeTable.length > 0) {
+    if ( attributeTable && attributeTable.length > 0) {
       product.attrs = attributeTable.map((item) => ({
         key: item.key,
         value: item.value,
@@ -230,24 +230,6 @@ const adminDeleteProductImage = async (req, res, next) => {
       { $pull: { images: { path: imagePath } } }
     ).orFail();
     return res.end()
-    // try {
-    //   const path = require("path");
-    //   const finalPath = path.resolve("../frontend/public") + imagePath;
-  
-    //   const fs = require("fs");
-    //   fs.unlink(finalPath, (err) => {
-    //     if (err) {
-    //       res.status(500).send(err);
-    //     }
-    //   });
-    //   await Product.findOneAndUpdate(
-    //     { _id: req.params.productId },
-    //     { $pull: { images: { path: imagePath } } }
-    //   ).orFail();
-    //   return res.end();
-    // } catch (err) {
-    //   next(err);
-    // }
   };
 
 module.exports = {
