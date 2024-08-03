@@ -54,8 +54,8 @@ const getProduct = async (req, res, next) => {
       queryCondition = true;
     }
 
+    //pagination
     const pageNum = Number(req.query.pageNum) || 1;
-
     let sort = {};
     const sortOption = req.query.sort || "";
     if (sortOption) {

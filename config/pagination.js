@@ -1,2 +1,2 @@
 const recordsPerPage=3;
-return recordsPerPage;
+module.exports=recordsPerPage;
