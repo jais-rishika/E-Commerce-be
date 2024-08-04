@@ -1,3 +1,6 @@
+const {createServer} = require("http")
+const {Server} =require("socket.io")
+
 const express=require("express")
 const app=express()
 
@@ -37,7 +40,9 @@ app.use((error,res,next)=>{
     next(error )
 })
 
+const httpServer= createServer(app)
+global.io =new Server(httpServer)
 
-app.listen(port,()=>{
+httpServer.listen(port,()=>{
     console.log(`listening to port ${port}`)
 })
